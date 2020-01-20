@@ -1,0 +1,35 @@
+name: Build documentation on PR
+
+on: [push]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: Install Poetry
+        uses: dschep/install-poetry-action@v1.2
+
+      - name: Install Dependencies
+        run: poetry install
+
+      - name: build book
+        run: poetry run jupyter-book build book
+
+      # TODO: use this to check for broken links in book?
+      #- name: Check for dead links in Markdown
+      #  uses: gaurav-nelson/github-action-markdown-link-check@0.4.0
+
+      - name: Deploy to GitHub Pages
+        if: startsWith(github.ref, 'refs/heads/master')
+        uses: peaceiris/actions-gh-pages@v2.5.0
+        env:
+          ACTIONS_DEPLOY_KEY: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          PUBLISH_BRANCH: master
+          PUBLISH_DIR: book/_build
